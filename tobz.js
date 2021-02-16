@@ -678,7 +678,7 @@ module.exports = tobz = async (tobz, message) => {
                     }
                 }
                 if (body === '#unbanchat') {
-                    if (!isOwner) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh Owner Elaina!', id)
+                    if (!isOwner) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh Owner paluvi', id)
                     if(setting.banChats === false) return
                     setting.banChats = false
                     banChats = false
@@ -705,8 +705,87 @@ module.exports = tobz = async (tobz, message) => {
             console.log(`Banchat ${name}!`)
             await tobz.sendSeen(from)
             break
-        case prefix+'sticker':
-        case prefix+'stiker':
+                                case 'gifstiker':
+				case 'stiker':
+				case 'sticker':
+				case 's':
+						if ((isMedia && !mek.message.videoMessage || isQuotedImage) && args.length == 0) {
+						const encmedia = isQuotedImage ? JSON.parse(JSON.stringify(mek).replace('quotedM','m')).message.extendedTextMessage.contextInfo : mek
+						const media = await client.downloadAndSaveMediaMessage(encmedia)
+						if (isLimit(sender)) return reply(limitend(pushname2))
+						const ran= getRandom('.webp')
+						await ffmpeg(`./${media}`)
+							.input(media)
+							.on('start', function (cmd) {
+								console.log(`Started : ${cmd}`)
+							})
+							.on('error', function (err) {
+								console.log(`Error : ${err}`)
+								fs.unlinkSync(media)
+								reply(mess.error.stick)
+							})
+							.on('end', function () {
+								console.log('Finish')
+								buff = fs.readFileSync(ran)
+								client.sendMessage(from, buff, sticker, {quoted: mek})
+								fs.unlinkSync(media)
+								fs.unlinkSync(ran)
+							})
+							.addOutputOptions([`-vcodec`,`libwebp`,`-vf`,`scale='min(320,iw)':min'(320,ih)':force_original_aspect_ratio=decrease,fps=15, pad=320:320:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`])
+							.toFormat('webp')
+							.save(ran)
+					} else if ((isMedia && mek.message.videoMessage.seconds < 11 || isQuotedVideo && mek.message.extendedTextMessage.contextInfo.quotedMessage.videoMessage.seconds < 11) && args.length == 0) {
+						const encmedia = isQuotedVideo ? JSON.parse(JSON.stringify(mek).replace('quotedM','m')).message.extendedTextMessage.contextInfo : mek
+						const media = await client.downloadAndSaveMediaMessage(encmedia)
+						const ran= getRandom('.webp')
+						reply(mess.wait)
+						await ffmpeg(`./${media}`)
+							.inputFormat(media.split('.')[1])
+							.on('start', function (cmd) {
+								console.log(`Started : ${cmd}`)
+							})
+							.on('error', function (err) {
+								console.log(`Error : ${err}`)
+								fs.unlinkSync(media)
+								tipe = media.endsWith('.mp4') ? 'video' : 'gif'
+								reply(`\`\`\`Gagal, pada saat mengkonversi ${tipe} ke stiker\`\`\``)
+							})
+							.on('end', function () {
+								console.log('Finish')
+								buff = fs.readFileSync(ran)
+								client.sendMessage(from, buff, sticker, {quoted: mek})
+								fs.unlinkSync(media)
+								fs.unlinkSync(ran)
+							})
+							.addOutputOptions([`-vcodec`,`libwebp`,`-vf`,`scale='min(320,iw)':min'(320,ih)':force_original_aspect_ratio=decrease,fps=15, pad=320:320:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`])
+							.toFormat('webp')
+							.save(ran)
+					} else if ((isMedia || isQuotedImage) && args[0] == 'nobg') {
+						const encmedia = isQuotedImage ? JSON.parse(JSON.stringify(mek).replace('quotedM','m')).message.extendedTextMessage.contextInfo : mek
+						const media = await client.downloadAndSaveMediaMessage(encmedia)
+						ranw = getRandom('.webp')
+						ranp = getRandom('.png')
+						reply(mess.wait)
+						keyrmbg = 'bcAvZyjYAjKkp1cmK8ZgQvWH'
+						await removeBackgroundFromImageFile({path: media, apiKey: keyrmbg.result, size: 'auto', type: 'auto', ranp}).then(res => {
+							fs.unlinkSync(media)
+							let buffer = Buffer.from(res.base64img, 'base64')
+							fs.writeFileSync(ranp, buffer, (err) => {
+								if (err) return reply('Gagal, Terjadi kesalahan, silahkan coba beberapa saat lagi.')
+							})
+							exec(`ffmpeg -i ${ranp} -vcodec libwebp -filter:v fps=fps=20 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${ranw}`, (err) => {
+								fs.unlinkSync(ranp)
+								if (err) return reply(mess.error.stick)
+								buff = fs.readFileSync(ranw)
+								client.sendMessage(from, buff, sticker, {quoted: mek})
+							})
+						})
+					} else {
+						reply(`Kirim gambar dengan caption ${prefix}sticker atau tag gambar yang sudah dikirim`)
+					}
+					await limitAdd(sender) 
+					break
+        
             if(isReg(obj)) return
             if(cekumur(cekage)) return
             if (isMedia && type === 'image') {
@@ -1047,7 +1126,7 @@ module.exports = tobz = async (tobz, message) => {
                 const namanye = argz[1]
                 const umurnye = argz[2]
                     if(isNaN(umurnye)) return await tobz.reply(from, 'Umur harus berupa angka!!', id)
-                    if(umurnye >= 40) return await tobz.reply(from, 'Kamu terlalu tua, kembali lagi ke masa muda untuk menggunakan Elaina', id)
+                    if(umurnye >= 40) return await tobz.reply(from, 'Kamu terlalu tua, kembali lagi ke masa muda untuk menggunakan paluvi', id)
                     const jenenge = namanye.replace(' ','')
                     var ceknya = nonye
                         var obj = pendaftar.some((val) => {
@@ -1079,11 +1158,11 @@ Total Pengguna yang telah terdaftar ${pendaftar.length}`)
                             }
                         }
                     } else {
-                        await tobz.reply(from, `Format yang kamu masukkan salah, kirim ${prefix}daftar |nama|umur\n\ncontoh format: ${prefix}daftar |ahmad|17\n\ncukup gunakan nama depan/panggilan saja`, id) //if user is not registered
+                        await tobz.reply(from, `Format yang kamu masukkan salah, kirim ${prefix}daftar |nama|umur\n\ncontoh format: ${prefix}daftar |P4luvi|17\n\ncukup gunakan nama depan/panggilan saja`, id) //if user is not registered
                     }
                 break
             case prefix+'daftarulang':
-                    if (!isAdmin) return tobz.reply(from, 'Command ini hanya dapat digunakan oleh admin Elaina', id)  
+                    if (!isAdmin) return tobz.reply(from, 'Command ini hanya dapat digunakan oleh admin P4luv1', id)  
                     const nomernya = args[1]
                     let textnya = nomernya.replace(/[-\s+@c.us]/g,'')
                     const cusnya = textnya + '@c.us'
@@ -1235,13 +1314,13 @@ ${desc}`)
             break
         case prefix+'owner':
         case prefix+'creator':
-            tobz.sendContact(chatId, `6281311850715@c.us`)
+            tobz.sendContact(chatId, `6287871537199@c.us`)
             tobz.reply(from, 'Itu nomor Pacar ku, eh maksudnya Owner ku', id)
             break
         case prefix+'resetsticker':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
-            if (!isAdmin) return tobz.reply(from, `Maaf, perintah ini hanya dapat dilakukan oleh Admin Elaina!`, id)
+            if (!isAdmin) return tobz.reply(from, `Maaf, perintah ini hanya dapat dilakukan oleh Admin P4luv1`, id)
             if (!args.length === 1) return tobz.reply(from, `Masukkan nomornya, *GUNAKAN AWALAN 62*\ncontoh: #resetsticker 62852262236155 / #resetsticker @member`, id) 
             const nomebr = args[1]
             let textz = nomebr.replace(/[-\s+@c.us]/g,'')
